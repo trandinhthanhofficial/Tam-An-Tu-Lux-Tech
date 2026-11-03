@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0604">
+<meta name="description" content="Chánh điện online 2.5D: 32 chỗ ngồi, dâng hương, thỉnh chuông cùng mọi người ở bất kỳ đâu. 在线正殿：32 席，上香、叩钟，与世界各地的人一同静坐。">
+<meta property="og:title" content="Tịnh Tâm · Chánh Điện Online">
+<meta property="og:description" content="32 chỗ ngồi, dâng hương và thỉnh chuông cùng mọi người.">
+<meta property="og:image" content="assets/hall.jpg">
+<title>Tịnh Tâm · Chánh Điện Online</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231a0d07'/%3E%3Ccircle cx='16' cy='13' r='6' fill='none' stroke='%23e2b04f' stroke-width='2'/%3E%3Cpath d='M16 19v7M11 26h10' stroke='%23e2b04f' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="app/styles.css">
+</head>
+<body>
+
+<div id="wrap"><div id="stage">
+
+  <canvas id="c"></canvas>
+
+  <!-- ------------------------------------------------------------- top bar -->
+  <div id="hud" hidden>
+    <span class="chip" id="serverChip">
+      <span class="dot ok" id="srvDot"></span>
+      <b id="serverName">—</b>
+    </span>
+    <span class="chip" id="countChip"><span class="n" id="count">0</span><i>/</i><span class="n" id="cap">32</span></span>
+    <span class="spacer"></span>
+    <button class="chip" id="langBtn" data-i18n="btn.lang" data-i18n-title="btn.lang">中文</button>
+    <button class="iconbtn" id="musicBtn" aria-label="music">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18 6a8 8 0 0 1 0 12"/>
+      </svg>
+    </button>
+    <button class="iconbtn" id="leaveBtn" data-i18n-title="btn.leave" data-i18n-aria="btn.leave" aria-label="leave">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="netbar" hidden><span class="dot wait" id="netDot"></span><span id="netText"></span></div>
+
+  <!-- ------------------------------------------------------------- rituals -->
+  <div id="bottom" hidden>
+    <div id="rituals" style="display:contents">
+      <button class="ritual" data-ritual="incense">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21V11"/><path d="M9 21h6"/>
+          <path d="M12 9c2.6-1.6 2.6-4.2 0-5.8"/>
+          <path d="M12 6.5c1.5-1 1.5-2.6 0-3.6"/>
+        </svg>
+        <span data-i18n="ritual.incense">Dâng hương</span>
+      </button>
+      <button class="ritual" data-ritual="petal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3c4.2 3.2 4.2 9.4 0 12.6C7.8 12.4 7.8 6.2 12 3z"/>
+          <path d="M12 16v5"/><path d="M12 19c2.4 0 4-1.2 4.6-3"/>
+        </svg>
+        <span data-i18n="ritual.petal">Cánh sen</span>
+      </button>
+      <button class="ritual" data-ritual="lotus">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 6c2.6 2.2 3.6 4.6 3.6 7.2 0 2.2-1.6 3.8-3.6 3.8s-3.6-1.6-3.6-3.8C8.4 10.6 9.4 8.2 12 6z"/>
+          <path d="M12 17c-3.6 0-6.6-1.6-8.4-4.2 2.6-.6 5 .2 6.8 2"/>
+          <path d="M12 17c3.6 0 6.6-1.6 8.4-4.2-2.6-.6-5 .2-6.8 2"/>
+        </svg>
+        <span data-i18n="ritual.lotus">Hoa sen</span>
+      </button>
+      <button class="ritual" data-ritual="bell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 4a5 5 0 0 1 5 5v3.6l1.8 2.9H5.2L7 12.6V9a5 5 0 0 1 5-5z"/>
+          <path d="M10 18.4a2 2 0 0 0 4 0"/>
+        </svg>
+        <span data-i18n="ritual.bell">Thỉnh chuông</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------------- chat + mo dock -->
+  <div id="dock" hidden>
+    <section id="chatPanel" hidden>
+      <header>
+        <b data-i18n="chat.title">Bình luận</b>
+        <span class="hint" data-i18n="chat.window">90 giây gần nhất</span>
+        <button id="chatClose" aria-label="close">&times;</button>
+      </header>
+      <div id="chatList"></div>
+      <form id="chatForm">
+        <input id="chatInput" type="text" maxlength="120" autocomplete="off" data-i18n-ph="chat.placeholder" placeholder="Nhập lời nguyện…">
+        <button type="submit" data-i18n="chat.send">Gửi</button>
+      </form>
+    </section>
+
+    <div id="fabRow">
+      <button id="moFab" data-i18n-aria="mo.open" aria-label="wooden fish">
+        <img src="assets/fx_mo.png" alt="">
+      </button>
+      <button id="chatFab" data-i18n-aria="chat.open" aria-label="chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.2A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/>
+          <path d="M8.5 11h7"/><path d="M8.5 14.5h4"/>
+        </svg>
+        <span id="chatBadge" hidden>0</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------------------ mo panel -->
+  <div id="moPanel" hidden>
+    <div class="mo-card">
+      <header>
+        <b data-i18n="mo.title">Gõ mõ tụng kinh</b>
+        <button id="moClose" aria-label="close">&times;</button>
+      </header>
+      <button id="moHit" data-i18n-aria="mo.hit" aria-label="wooden fish">
+        <img src="assets/fx_mo.png" alt="">
+        <span class="mo-ping"></span>
+        <span class="mo-plus" id="moPlus">+1</span>
+      </button>
+      <div class="mo-stats">
+        <span class="mo-round"><b id="moCount">0</b><i>/99</i></span>
+        <span class="mo-merit"><b id="moMerit">0</b><em data-i18n="mo.merit">công đức</em></span>
+      </div>
+      <div class="mo-bar"><i id="moBar"></i></div>
+      <p class="hint" data-i18n="mo.hint">Gõ đủ 99 lần được 1 công đức.</p>
+    </div>
+  </div>
+
+  <div id="toast" role="status"></div>
+
+  <!-- ---------------------------------------------------------------- gate -->
+  <div id="gate">
+    <form id="gateForm">
+      <h1 data-i18n="gate.h1">Chánh Điện Online</h1>
+      <p data-i18n="gate.desc">Chọn chánh điện, nhập pháp danh rồi vào an tọa.</p>
+
+      <label class="lbl" data-i18n="gate.server">Chánh điện</label>
+      <div id="serverList" role="radiogroup"></div>
+
+      <label class="lbl" for="dharma" data-i18n="gate.name">Pháp danh</label>
+      <input id="dharma" name="dharma" type="text" maxlength="16" autocomplete="nickname" required data-i18n-ph="gate.place" placeholder="Ví dụ: Diệu Hạnh, Minh Tâm…">
+
+      <label class="lbl" data-i18n="gate.robe">Y phục</label>
+      <div id="skin">
+        <button type="button" data-skin="man" aria-pressed="true"><span data-i18n="skin.man">Nam áo lam</span></button>
+        <button type="button" data-skin="woman" aria-pressed="false"><span data-i18n="skin.woman">Nữ áo lam</span></button>
+        <button type="button" data-skin="granny" aria-pressed="false"><span data-i18n="skin.granny">Áo nâu</span></button>
+        <button type="button" data-skin="monk" aria-pressed="false"><span data-i18n="skin.monk">Tăng sĩ</span></button>
+        <button type="button" data-skin="nun" aria-pressed="false"><span data-i18n="skin.nun">Ni sư</span></button>
+        <button type="button" data-skin="child" aria-pressed="false"><span data-i18n="skin.child">Chú tiểu</span></button>
+      </div>
+
+      <button type="submit" id="enterBtn" data-i18n="gate.enter">Vào chánh điện</button>
+      <span class="hint" data-i18n="gate.hint">Chạm vào chánh điện để tụng một câu.</span>
+      <span class="hint" style="text-align:center;opacity:.7" data-i18n="gate.credit">Mã nguồn mở · MIT</span>
+    </form>
+  </div>
+
+</div></div>
+
+<script src="vendor/mqtt.min.js"></script>
+<script src="app/config.js"></script>
+<script src="app/i18n.js"></script>
+<script src="app/net.js"></script>
+<script src="app/audio.js"></script>
+<script src="app/hall.js"></script>
+<script src="app/main.js"></script>
+</body>
+</html>
