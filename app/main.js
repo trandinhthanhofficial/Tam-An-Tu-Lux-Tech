@@ -11,7 +11,7 @@
   /* ------------------------------------------------------------ config */
   const CFG = window.APP_CONFIG || {};
   const SERVERS = (CFG.servers && CFG.servers.length) ? CFG.servers : [{ id: 'main', name: 'Main' }];
-  const CAP = CFG.capacity || 32;
+  const CAP = CFG.capacity || 10;
 
   function serverName(s) {
     return window.I18N.lang === 'zh' ? (s.nameZh || s.name) : s.name;
@@ -34,6 +34,7 @@
     })(),
     name: store('cd.name') || '',
     skin: store('cd.skin') || 'man',
+    seat: null,
     joinedAt: Date.now(),
     joined: false,
   };
@@ -74,16 +75,73 @@
 
   function renderRoom() {
     const list = ordered(peerMapOf(activeServer));
+    rebuildSeats();
     window.Hall.sync(list.map(function (p) {
-      return { uid: p.uid, name: p.name, skin: p.skin };
+      return { uid: p.uid, name: p.name, skin: p.skin, seat: effectiveSeat(p) };
     }));
     $('count').textContent = String(list.length);
     updateNetText();
+
+    // somebody else claimed the seat we picked first — choose again
+    if (me.joined && me.seat != null && effectiveSeat(me) == null) {
+      me.seat = null;
+      const self = peerMapOf(activeServer).get(me.uid);
+      if (self) self.seat = null;
+      announce();
+      toast(t('pick.taken'));
+      openPicker();
+    }
+  }
+
+  /* seat ownership: the earliest joiner wins a contested seat, so every client
+     computes the same result without a server to arbitrate */
+  const seatOwner = new Map();   // seat index -> peer
+
+  function rebuildSeats() {
+    seatOwner.clear();
+    const list = Array.from(peerMapOf(activeServer).values())
+      .sort(function (a, b) { return (a.joinedAt - b.joinedAt) || (a.uid < b.uid ? -1 : 1); });
+    for (const p of list) {
+      if (p.seat == null) continue;
+      if (!seatOwner.has(p.seat)) seatOwner.set(p.seat, p);
+    }
+  }
+
+  function effectiveSeat(p) {
+    if (!p || p.seat == null) return null;
+    const own = seatOwner.get(p.seat);
+    return (own && own.uid === p.uid) ? p.seat : null;
+  }
+
+  let picking = false;
+
+  function openPicker() {
+    if (!me.joined) return;
+    const taken = [];
+    seatOwner.forEach(function (p, idx) { taken.push(idx); });
+    window.Hall.setPick(true, taken);
+    picking = true;
+    const free = window.Hall.freeCount();
+    $('pickHint').hidden = free === 0;
+    if (free === 0) toast(t('gate.full'));
+  }
+
+  function onPickSeat(idx) {
+    if (idx < 0) return;
+    me.seat = idx;
+    const self = peerMapOf(activeServer).get(me.uid);
+    if (self) self.seat = idx;
+    picking = false;
+    window.Hall.setPick(false);
+    $('pickHint').hidden = true;
+    announce();
+    renderRoom();
+    toast(t('pick.yours', { n: idx + 1 }));
   }
 
   function announce() {
     if (!me.joined) return;
-    Net.publish({ k: 'hi', uid: me.uid, name: me.name, skin: me.skin, t: me.joinedAt });
+    Net.publish({ k: 'hi', uid: me.uid, name: me.name, skin: me.skin, seat: me.seat, t: me.joinedAt });
   }
 
   /* ---------------------------------------------------------------- chat */
@@ -152,6 +210,7 @@
 
   function applyFx(m, local) {
     window.Hall.fx(m.kind, m.uid);
+    if (m.kind === 'incense') window.Hall.bowDeep(m.uid);
     window.Audio2.play(m.kind);
     if (m.bless != null) window.Hall.bless(m.uid, t('bless.' + m.bless));
     const v = peerMapOf(activeServer).get(m.uid);
@@ -219,12 +278,17 @@
         const known = map.has(m.uid);
         let p = map.get(m.uid);
         if (!p) {
-          p = { uid: m.uid, name: m.name || '—', skin: m.skin || 'man', joinedAt: m.t || Date.now(), lastSeen: Date.now() };
+          p = {
+            uid: m.uid, name: m.name || '—', skin: m.skin || 'man',
+            joinedAt: m.t || Date.now(), lastSeen: Date.now(),
+            seat: m.seat != null ? m.seat : null,
+          };
           map.set(m.uid, p);
           if (isActive && m.uid !== me.uid) pushSys(p.name, t('sys.joined'));
         } else {
           if (m.name) p.name = m.name;
           if (m.skin) p.skin = m.skin;
+          if (m.seat !== undefined) p.seat = (m.seat == null ? null : m.seat);
           p.lastSeen = Date.now();
         }
         if (isActive) {
@@ -334,8 +398,12 @@
     store('cd.server', activeServer);
 
     Net.setActive(activeServer);
+    me.seat = null;
     const map = peerMapOf(activeServer);
-    map.set(me.uid, { uid: me.uid, name: me.name, skin: me.skin, joinedAt: me.joinedAt, lastSeen: Date.now() });
+    map.set(me.uid, {
+      uid: me.uid, name: me.name, skin: me.skin,
+      joinedAt: me.joinedAt, lastSeen: Date.now(), seat: null,
+    });
 
     window.Hall.setMyUid(me.uid);
     renderRoom();
@@ -369,11 +437,16 @@
     $('dock').hidden = false;
     renderHudServer();
     renderMo();
+    openPicker();
   }
 
   function endSession() {
     Net.publish({ k: 'bye', uid: me.uid });
     me.joined = false;
+    me.seat = null;
+    picking = false;
+    window.Hall.setPick(false);
+    $('pickHint').hidden = true;
     clearInterval(hbTimer);
     clearInterval(pruneTimer);
     peerMapOf(activeServer).delete(me.uid);
@@ -401,15 +474,21 @@
     try { n = parseInt(new URLSearchParams(location.search).get('preview'), 10) || 0; } catch (e) {}
     if (n <= 0) return;
     const map = peerMapOf(activeServer);
-    for (let i = 0; i < n && i < CAP - 1; i++) {
-      map.set('pv' + i, {
-        uid: 'pv' + i,
-        name: PREVIEW_NAMES[i % PREVIEW_NAMES.length],
-        skin: PREVIEW_SKINS[i % PREVIEW_SKINS.length],
-        joinedAt: me.joinedAt + i + 1,
+    const used = new Set();
+    map.forEach(function (p) { if (p.seat != null) used.add(p.seat); });
+    let added = 0;
+    for (let s = 0; s < CAP && added < n; s++) {
+      if (used.has(s)) continue;
+      map.set('pv' + s, {
+        uid: 'pv' + s,
+        name: PREVIEW_NAMES[s % PREVIEW_NAMES.length],
+        skin: PREVIEW_SKINS[s % PREVIEW_SKINS.length],
+        joinedAt: me.joinedAt + 10 + s,
         lastSeen: Date.now(),
+        seat: s,
         demo: true,
       });
+      added++;
     }
     renderRoom();
   }
@@ -525,9 +604,18 @@
       if (e.key === 'Escape' && !$('moPanel').hidden) $('moPanel').hidden = true;
     });
 
-    /* tap the hall to bow */
-    $('c').addEventListener('pointerdown', function () {
+    /* tap the hall: pick a seat while choosing, otherwise bow */
+    $('c').addEventListener('pointerdown', function (e) {
       if (!me.joined) return;
+      if (picking) {
+        const r = $('c').getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width * 1080;
+        const py = (e.clientY - r.top) / r.height * 1920;
+        const idx = window.Hall.pickAt(px, py);
+        if (idx === -2) { toast(t('pick.occupied')); return; }
+        if (idx >= 0) onPickSeat(idx);
+        return;
+      }
       window.Audio2.mo();
       window.Hall.bow(me.uid);
     });

@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0604">
-<meta name="description" content="Chánh điện online 2.5D: 32 chỗ ngồi, dâng hương, thỉnh chuông cùng mọi người ở bất kỳ đâu. 在线正殿：32 席，上香、叩钟，与世界各地的人一同静坐。">
+<meta name="description" content="Chánh điện online 2.5D: 10 chỗ ngồi, dâng hương, thỉnh chuông cùng mọi người ở bất kỳ đâu. 在线正殿：10 席，上香、叩钟，与世界各地的人一同静坐。">
 <meta property="og:title" content="Tịnh Tâm · Chánh Điện Online">
-<meta property="og:description" content="32 chỗ ngồi, dâng hương và thỉnh chuông cùng mọi người.">
+<meta property="og:description" content="10 chỗ ngồi, dâng hương và thỉnh chuông cùng mọi người.">
 <meta property="og:image" content="assets/hall.jpg">
 <title>Tịnh Tâm · Chánh Điện Online</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231a0d07'/%3E%3Ccircle cx='16' cy='13' r='6' fill='none' stroke='%23e2b04f' stroke-width='2'/%3E%3Cpath d='M16 19v7M11 26h10' stroke='%23e2b04f' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -24,7 +24,7 @@
       <span class="dot ok" id="srvDot"></span>
       <b id="serverName">—</b>
     </span>
-    <span class="chip" id="countChip"><span class="n" id="count">0</span><i>/</i><span class="n" id="cap">32</span></span>
+    <span class="chip" id="countChip"><span class="n" id="count">0</span><i>/</i><span class="n" id="cap">10</span></span>
     <span class="spacer"></span>
     <button class="chip" id="langBtn" data-i18n="btn.lang" data-i18n-title="btn.lang">中文</button>
     <button class="iconbtn" id="musicBtn" aria-label="music">
@@ -40,6 +40,11 @@
   </div>
 
   <div id="netbar" hidden><span class="dot wait" id="netDot"></span><span id="netText"></span></div>
+
+  <div id="pickHint" hidden>
+    <b data-i18n="pick.title">Chọn chỗ ngồi</b>
+    <span data-i18n="pick.hint">Bấm vào một vị trí trống để bước vào ngồi.</span>
+  </div>
 
   <!-- ------------------------------------------------------------- rituals -->
   <div id="bottom" hidden>

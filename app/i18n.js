@@ -71,6 +71,12 @@
       'chat.empty': 'Chưa có bình luận nào trong 90 giây qua.',
       'chat.open': 'Mở ô bình luận',
 
+      'pick.title': 'Chọn chỗ ngồi',
+      'pick.hint': 'Bấm vào một vị trí trống để bước vào ngồi.',
+      'pick.yours': 'Bạn ngồi ở vị trí {n}.',
+      'pick.taken': 'Vị trí đó vừa có người chọn, mời chọn chỗ khác.',
+      'pick.occupied': 'Chỗ này đã có người ngồi.',
+
       'sys.joined': 'đã vào chánh điện',
       'sys.ritual': 'đã {ritual}',
 
@@ -150,6 +156,12 @@
       'chat.send': '发送',
       'chat.empty': '最近 90 秒内还没有留言。',
       'chat.open': '打开留言框',
+
+      'pick.title': '选择座位',
+      'pick.hint': '点击一个空位即可入座。',
+      'pick.yours': '你坐在 {n} 号位。',
+      'pick.taken': '该位置刚被他人选择，请另选一位。',
+      'pick.occupied': '这个位置已经有人了。',
 
       'sys.joined': '已进入正殿',
       'sys.ritual': '已{ritual}',

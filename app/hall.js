@@ -36,44 +36,25 @@
   const hasAnim = k => !!(ANIM[k] && A['anim_' + k] && A['anim_' + k].naturalWidth > 0);
 
   /* ------------------------------------------------------------- seat layout */
-  function halfAt(y) { return Math.min(500, 410 + (y - 1245) * 0.24); }
-  function aisleAt(y) { return 92 + (y - 1245) * 0.078; }
-
-  /* Rows are spaced slightly wider than a seated sprite is tall, so every one of
-     the 32 people stays fully visible from the front row to the back. */
-  const ROWS = [
-    { y: 1270, s: 0.350, fill: 0, xs: [540], gap: 320, role: 'abbot', mat: true },
-    { y: 1360, s: 0.320, fill: 1, xs: [386, 540, 694], gap: 154, role: 'senior' },
-    { y: 1442, s: 0.265, fill: 5, per: 2 },   // back row  — 4 seats
-    { y: 1528, s: 0.295, fill: 4, per: 4 },   // middle    — 8 seats
-    { y: 1618, s: 0.325, fill: 3, per: 4 },   // front     — 8 seats
-    { y: 1714, s: 0.355, fill: 2, per: 4 },   // nearest   — 8 seats
+  /* Ten seats, matched to the cushions painted on the floor:
+       1     trụ trì, centre, in front of the altar (own mat — he sits in the aisle)
+       2-9   four rows of two, either side of the central aisle
+       10    head of the aisle, nearest the camera (own mat — bare floor there)
+     Each x/y below was measured off assets/hall.jpg so a sprite lands dead centre
+     on its cushion. */
+  const SEATS = [
+    { x: 540, y: 1205, s: 0.340, gap: 300, role: 'abbot', mat: true },  // 1
+    { x: 440, y: 1247, s: 0.270, gap: 210 },                            // 2
+    { x: 650, y: 1247, s: 0.270, gap: 210 },                            // 3
+    { x: 390, y: 1320, s: 0.290, gap: 285 },                            // 4
+    { x: 675, y: 1320, s: 0.290, gap: 285 },                            // 5
+    { x: 355, y: 1404, s: 0.310, gap: 335 },                            // 6
+    { x: 690, y: 1404, s: 0.310, gap: 335 },                            // 7
+    { x: 341, y: 1660, s: 0.340, gap: 396 },                            // 8
+    { x: 737, y: 1660, s: 0.340, gap: 396 },                            // 9
+    { x: 540, y: 1700, s: 0.360, gap: 300, mat: true },                 // 10
   ];
-
-  const SEATS = [];
-  for (const r of ROWS) {
-    if (r.xs) {
-      r.xs.forEach(function (x) {
-        SEATS.push({ x: x, y: r.y, s: r.s, gap: r.gap, role: r.role, fill: r.fill, mat: r.mat });
-      });
-      continue;
-    }
-    const half = halfAt(r.y), a = aisleAt(r.y), per = r.per;
-    const w = (half - a) / per;
-    for (let side = -1; side <= 1; side += 2) {
-      for (let i = 0; i < per; i++) {
-        SEATS.push({
-          x: 540 + side * (a + (i + 0.5) * w), y: r.y, s: r.s,
-          gap: w * 1.02, role: 'seat', fill: r.fill,
-        });
-      }
-    }
-  }
-  // Fill order: abbot first, then the three, then the rows nearest the camera.
-  SEATS.sort(function (p, q) {
-    return (p.fill - q.fill) || (Math.abs(p.x - 540) - Math.abs(q.x - 540));
-  });
-  const CAP = SEATS.length; // 32
+  const CAP = SEATS.length; // 10
 
   const DOOR = { x: 540, y: SH + 140 };
 
@@ -85,24 +66,42 @@
   let myUid = null, haloPulse = 0, altarGlow = 0, flash = 0;
 
   /* -------------------------------------------------------------- visitors */
+  // list items: { uid, name, skin, seat }  — seat is an index into SEATS, or null
+  // for someone who has joined but not picked a place yet (they wait at the door).
   function sync(list) {
     const seen = new Set();
-    list.forEach(function (p, i) {
+    list.forEach(function (p) {
       seen.add(p.uid);
-      const seat = i < CAP ? SEATS[i] : null;
+      const idx = (p.seat != null && SEATS[p.seat]) ? p.seat : null;
+      const seat = idx == null ? null : SEATS[idx];
       let v = visitors.get(p.uid);
+
       if (!v) {
         v = {
-          uid: p.uid, name: p.name, skin: p.skin, seat: seat,
-          x: seat ? DOOR.x : 540, y: seat ? DOOR.y : SH + 200,
+          uid: p.uid, name: p.name, skin: p.skin, seat: seat, seatIdx: idx,
+          x: DOOR.x, y: DOOR.y,
           state: seat ? 'walk' : 'idle', frame: 0, ft: 0, sitT: 0,
-          flip: false, fade: 0, glow: 0, bow: 0, phase: Math.random() * 6.28,
+          flip: false, fade: 0, glow: 0, phase: Math.random() * 6.28,
+          bowT: 0, bowDur: 0, bowN: 0, bowAmp: 0,
         };
         visitors.set(p.uid, v);
       } else {
         v.name = p.name;
         if (v.skin !== p.skin) { v.skin = p.skin; v.glow = 0.8; if (v.state === 'sit') v.frame = 7; }
-        v.seat = seat;
+
+        if (idx !== v.seatIdx) {
+          v.seatIdx = idx;
+          v.seat = seat;
+          if (seat) {
+            // walk in from the door if they were waiting, otherwise glide across
+            if (v.state === 'idle') { v.x = DOOR.x; v.y = DOOR.y; v.state = 'walk'; }
+          } else {
+            v.state = 'idle';
+            v.x = DOOR.x; v.y = DOOR.y;
+          }
+        } else {
+          v.seat = seat;
+        }
       }
       v.isMe = p.uid === myUid;
       v.role = seat ? seat.role : 'seat';
@@ -114,16 +113,84 @@
 
   function count() { return visitors.size; }
 
+  /* ------------------------------------------------------- choosing a seat */
+  let pickMode = false, pickables = [], takenList = [];
+
+  function setPick(on, takenIdx) {
+    pickMode = !!on;
+    pickables = [];
+    takenList = takenIdx ? takenIdx.slice() : [];
+    if (!pickMode) return;
+    const taken = new Set(takenList);
+    SEATS.forEach(function (s, i) { if (!taken.has(i)) pickables.push(i); });
+  }
+
+  function freeCount() { return pickables.length; }
+
+  /* stage-space hit test; main.js converts the pointer into 1080x1920 coords.
+     Returns the seat index, -2 for an occupied seat, -1 for empty floor. */
+  function pickAt(px, py) {
+    if (!pickMode) return -1;
+    let best = -1, bestD = 1e9;
+    for (let k = 0; k < pickables.length; k++) {
+      const i = pickables[k], s = SEATS[i];
+      const cy = s.y - 34 * s.s;
+      const d = Math.sqrt((px - s.x) * (px - s.x) + (py - cy) * (py - cy));
+      if (d < 95 && d < bestD) { bestD = d; best = i; }
+    }
+    if (best >= 0) return best;
+    for (let k = 0; k < takenList.length; k++) {
+      const s = SEATS[takenList[k]];
+      if (!s) continue;
+      const cy = s.y - 34 * s.s;
+      if (Math.sqrt((px - s.x) * (px - s.x) + (py - cy) * (py - cy)) < 95) return -2;
+    }
+    return -1;
+  }
+
+  function drawPick(t) {
+    for (let k = 0; k < pickables.length; k++) {
+      const i = pickables[k], s = SEATS[i];
+      const cx = s.x, cy = s.y - 34 * s.s;
+      const r = 30 + 4 * Math.sin(t * 2.6 + i * 1.1);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, 6.29);
+      ctx.fillStyle = 'rgba(126,29,18,.62)';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(255,214,140,.95)';
+      ctx.stroke();
+      ctx.fillStyle = '#ffeec4';
+      ctx.font = '700 ' + Math.round(24 + 10 * s.s) + 'px system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(i + 1), cx, cy + 1);
+      ctx.restore();
+    }
+  }
+
   /* --------------------------------------------------------------- effects */
   function pulseHalo(v) { haloPulse = Math.max(haloPulse, v == null ? 1 : v); }
 
-  /* a small personal gesture — a bow and a few petals, not a full ritual */
+  function startBow(v, n, dur, amp) {
+    v.bowT = 0; v.bowN = n; v.bowDur = dur; v.bowAmp = amp;
+  }
+
+  /* a small personal gesture — one quick bow and a few petals */
   function bow(uid) {
     const v = visitors.get(uid);
     if (!v) return;
-    v.bow = 1;
+    startBow(v, 1, 0.55, 0.05);
     const s = v.seat ? v.seat.s : 0.34;
     spawnPetals(v.x, v.y - 40 * s, 5, true, 70 * s + 30);
+  }
+
+  /* offering incense: three slow deep bows, palms together */
+  function bowDeep(uid) {
+    const v = visitors.get(uid);
+    if (!v) return;
+    startBow(v, 3, 2.7, 0.16);
   }
 
   /* A blessing line drifts up over the head of whoever just made an offering.
@@ -348,7 +415,13 @@
 
     v.fade = Math.min(1, v.fade + dt * 2);
     v.glow = Math.max(0, v.glow - dt * 0.5);
-    v.bow = Math.max(0, v.bow - dt * 0.8);
+
+    /* bow sequence: each cycle is a sine hump, so a run of three reads as
+       bow–rise–bow–rise–bow rather than one long squash */
+    if (v.bowN > 0) {
+      v.bowT += dt;
+      if (v.bowT >= v.bowDur) { v.bowN = 0; v.bowT = 0; }
+    }
 
     if (v.glow > 0) {
       ctx.save();
@@ -363,7 +436,6 @@
     }
 
     /* contact shadow so nobody floats on the parquet */
-    if (v.seat && v.seat.mat) drawMat(v.x, v.y, s);
     ctx.save();
     ctx.globalAlpha = 0.34 * v.fade;
     const sg = ctx.createRadialGradient(v.x, v.y + 2, 1, v.x, v.y + 2, 60 * s);
@@ -376,12 +448,19 @@
     ctx.restore();
 
     const breathe = v.state === 'sit' ? Math.sin(t * 1.1 + v.phase) * 2 * s : 0;
-    const bowK = v.state === 'sit' ? Math.sin(Math.min(1, v.bow) * Math.PI) * 0.045 : 0;
+    let bowK = 0;
+    if (v.bowN > 0) {
+      const seg = v.bowDur / v.bowN;
+      const ph = (v.bowT / seg) % 1;
+      bowK = Math.sin(ph * Math.PI) * v.bowAmp;
+    }
 
     ctx.save();
     ctx.globalAlpha = v.fade;
     ctx.translate(v.x, v.y);
-    if (bowK > 0) ctx.transform(1, 0, 0, 1 - bowK, 0, 0);
+    /* A bow seen from behind: the body sinks and spreads slightly. Squashing
+       straight down alone reads as squatting, so the X scale opens up too. */
+    if (bowK > 0) ctx.transform(1 + bowK * 0.30, 0, 0, 1 - bowK * 1.75, 0, 0);
 
     let topY;
     if (anim) {
@@ -396,7 +475,7 @@
     }
     ctx.restore();
 
-    const ty = v.y - topY - 12 * s;
+    const ty = v.y - topY * (1 - bowK) - 12 * s;
     v._ty = ty;
     nameTag(v.name, v.x, ty, s, {
       abbot: v.role === 'abbot',
@@ -582,6 +661,12 @@
       if (blesses[i].t >= blesses[i].life) blesses.splice(i, 1);
     }
 
+    /* mats for the two seats that sit off the painted cushions — drawn always,
+       so an empty seat still looks like a place waiting for someone */
+    for (let i = 0; i < SEATS.length; i++) {
+      if (SEATS[i].mat) drawMat(SEATS[i].x, SEATS[i].y, SEATS[i].s);
+    }
+
     /* visitors, back to front */
     const list = Array.from(visitors.values()).sort(function (a, b) { return a.y - b.y; });
     for (const v of list) drawVisitor(v, t, dt);
@@ -595,6 +680,9 @@
       const bl = list.slice().sort(function (a, b) { return a.y - b.y; });
       for (const v of bl) if (v._ty) drawBless(v, v._ty, v.seat ? v.seat.s : 0.34);
     }
+
+    /* seat numbers on top of everything while somebody is choosing */
+    if (pickMode) drawPick(t);
 
     /* flash */
     if (flash > 0) {
@@ -612,7 +700,8 @@
 
   global.Hall = {
     sync: sync, setMyUid: setMyUid, count: count,
-    fx: fxPlay, bow: bow, bless: bless, pulseHalo: pulseHalo,
+    fx: fxPlay, bow: bow, bowDeep: bowDeep, bless: bless, pulseHalo: pulseHalo,
+    setPick: setPick, pickAt: pickAt, freeCount: freeCount,
     CAP: CAP, SEATS: SEATS,
     get seated() { return visitors.size; },
   };

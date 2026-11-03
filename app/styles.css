@@ -114,7 +114,28 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .dot.wait { background: #b07a3a; animation: pulse 1.4s infinite; }
 @keyframes pulse { 50% { opacity: .35; } }
 
-/* --------------------------------------------------------------- rituals */
+/* ------------------------------------------------------------ pick a seat */
+#pickHint {
+  position: absolute; z-index: 7;
+  left: 50%; top: 13%;
+  transform: translateX(-50%);
+  max-width: 84%;
+  padding: 9px 15px;
+  display: flex; flex-direction: column; gap: 2px;
+  align-items: center; text-align: center;
+  background: rgba(26,14,9,.92);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.55);
+  pointer-events: none;
+  animation: pickIn .3s ease-out;
+}
+#pickHint b { font-family: var(--serif); font-size: 14px; color: var(--gold2); }
+#pickHint span { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+@keyframes pickIn { from { opacity: 0; transform: translate(-50%, -8px); } }
+
+/* ------------------------------------------------------------- rituals */
 #bottom {
   position: absolute; z-index: 6;
   left: 8px; right: 8px;

@@ -22,7 +22,7 @@ Không cần server riêng, không cần tài khoản, không cần API key. Dep
 | Overlay 9:16 + bảng điều khiển riêng | Một trang duy nhất cho mọi người |
 | Chỉ tiếng Việt | Chuyển Việt ⇄ Trung bằng một nút |
 | Một phòng duy nhất | Nhiều chánh điện, chọn lúc vào, mỗi cái tách biệt |
-| 24/36/64/100 chỗ, lấp tuỳ ý | 32 chỗ cố định, thấy trọn cả 32 cùng lúc |
+| 24/36/64/100 chỗ, lấp tuỳ ý | 10 chỗ, người vào tự chọn vị trí |
 | 4 món quà có giá | 4 nghi lễ miễn phí, mỗi nghi lễ một hiệu ứng + âm thanh riêng |
 | Không có chat | Ô chat góc dưới, hiện bình luận trong 90 giây |
 | Không có | Gõ mõ tụng kinh, đủ 99 lần được 1 công đức |
@@ -69,7 +69,7 @@ window.APP_CONFIG = {
     { id: 'thienvien', name: 'Thiền Viện Tịnh Tâm', nameZh: '静心禅院' },
   ],
   defaultServer: 'luxshare',
-  capacity: 32,
+  capacity: 10,
 };
 ```
 
@@ -78,34 +78,42 @@ Lựa chọn được nhớ lại lần sau, và có thể chỉ định thẳng
 
 ---
 
-## Bố cục 32 chỗ ngồi
+## Mười chỗ ngồi
 
 ```
                         ┌──────────────┐
-                        │   TRỤ TRÌ    │  1 chỗ — chính giữa, sát bàn thờ
+                        │  1 · TRỤ TRÌ │  sát bàn thờ, chính giữa
                         └──────────────┘
-                     ○        ○        ○     3 chỗ — hàng thượng toạ
-                ○ ○            │            ○ ○     4 chỗ — hàng cuối (2 mỗi lối)
-             ○ ○ ○ ○           │           ○ ○ ○ ○   8 chỗ — 4 mỗi lối
-            ○ ○ ○ ○            │          ○ ○ ○ ○    8 chỗ — 4 mỗi lối
-             ○ ○ ○ ○           │           ○ ○ ○ ○   8 chỗ — 4 mỗi lối
+                     ○ 2           3 ○
+                   ○ 4               5 ○
+                 ○ 6                   7 ○
+              ○ 8                         9 ○
+                          ○ 10
 ```
 
-Tổng: **1 + 3 + 4 + 8 + 8 + 8 = 32**.
+Tổng: **1 trụ trì + 9 vị = 10**.
 
-Các hàng được giãn vừa đủ rộng hơn một pho tượng đang ngồi, nên không ai bị người phía trước che
-khuất — nhìn một lần là thấy trọn 32 vị trí, kể cả trên màn hình điện thoại.
+Toạ độ từng ghế được đo trực tiếp từ `assets/hall.jpg` để nhân vật ngồi đúng tâm bồ đoàn đã vẽ
+trong tranh: tám ghế ở hai cột hai bên lối đi, cộng một ghế ở đầu lối đi gần camera. Ghế 1 (trụ trì)
+và ghế 10 nằm trên sàn trống nên được vẽ thêm đệm riêng.
 
-Hai lối (trái/phải) cách nhau một lối đi giữa rộng dần về phía camera, đúng theo phối cảnh
-của bức tranh nền. Ghế được lấp từ hàng gần camera nhất, rồi lùi dần về sau.
+Những bồ đoàn còn lại trong tranh để trống — đúng như một chánh điện lúc vắng người.
 
-Người vào đầu tiên nhận ghế trụ trì. Khi có người rời đi, những người phía sau tự dồn lên
-một ghế (có hiệu ứng trượt), nên không bao giờ có ghế trống ở giữa.
+Muốn đổi số ghế, sửa mảng `SEATS` ở đầu `app/hall.js` và `capacity` trong `app/config.js`.
 
-Ai vào sau khi đủ 32 người vẫn xem được nhưng không có ghế.
+---
 
-Muốn đổi số ghế, sửa mảng `ROWS` ở đầu `app/hall.js` — mỗi dòng là một hàng ghế, `per` là số
-ghế mỗi lối.
+## Vào chánh điện: tự chọn chỗ
+
+Sau khi nhập pháp danh, chánh điện hiện ra với **số thứ tự trên từng chỗ còn trống**. Bấm vào một
+số là nhân vật bước từ cửa, đi lên lối giữa, rẽ vào chỗ rồi ngồi xuống.
+
+- Chỗ đã có người thì không hiện số; bấm vào sẽ báo "chỗ này đã có người ngồi".
+- Hai người cùng bấm một chỗ: máy nào vào phòng trước thắng, máy kia được mời chọn lại.
+- Hết chỗ thì chỉ xem được, không có ghế.
+
+Người vào đầu tiên thường chọn ghế 1 và thành trụ trì — nhưng không bắt buộc, ai thích ngồi đâu
+cũng được miễn còn trống.
 
 ---
 
@@ -116,12 +124,15 @@ Mỗi nghi lễ có hiệu ứng vẽ riêng và âm thanh tổng hợp riêng (
 
 | Nghi lễ | Hiệu ứng | Âm thanh |
 |---|---|---|
-| **Dâng hương** | Quầng sáng ấm trên bàn thờ, khói hương cuộn lên | Tiếng gió lọc + ba tiếng tàn hương lách tách + trầm ấm |
+| **Dâng hương** | Người dâng chắp tay bái ba lần, quầng sáng ấm trên bàn thờ, khói hương cuộn lên | Tiếng gió lọc + ba tiếng tàn hương lách tách + trầm ấm |
 | **Cánh sen** | 18 cánh sen xoay và bay lên quanh người dâng | Chuông pha lê bốn nốt + tiếng cánh rung |
 | **Hoa sen** | Đoá sen lớn nở trước Phật, toả tia sáng, hoa rơi | Hợp âm ngũ cung dâng lên + chuông nhẹ |
 | **Thỉnh chuông** | Chuông lớn treo trên khán thờ, ba vòng sóng lan trên sàn | Chuông đồng 6 hài âm, ngân dài ~7 giây |
 
 Bấm vào chánh điện bất kỳ đâu để cúi đầu một cái (chỉ hiện trên máy bạn).
+
+Dâng hương là nghi lễ duy nhất có động tác bái: nhân vật chắp tay cúi xuống ba lần, mỗi lần
+khoảng 0,9 giây, thân người hạ xuống và hơi nở ra như đang cúi về phía bàn thờ.
 
 ### Câu chúc phúc
 
@@ -161,11 +172,11 @@ Phím `Esc` đóng bảng. Gõ liên tục không bị giới hạn — đây l�
 
 ### Xem thử chánh điện đầy người
 
-Thêm `?preview=31` vào URL để lấp đầy 31 ghế còn lại bằng người mẫu **chỉ hiện trên máy bạn**
+Thêm `?preview=9` vào URL để lấp đầy 9 ghế còn lại bằng người mẫu **chỉ hiện trên máy bạn**
 (không gửi lên mạng). Dùng để chụp ảnh hoặc xem bố cục:
 
 ```
-http://localhost:8000/?preview=31
+http://localhost:8000/?preview=9
 ```
 
 ---
@@ -201,7 +212,7 @@ app/
   i18n.js           từ điển Việt/Trung + hàm t()
   net.js            MQTT qua WSS, nhiều phòng, 3 broker dự phòng
   audio.js          WebAudio: nhạc, chuông, mõ, 4 âm thanh nghi lễ
-  hall.js           engine vẽ canvas: 32 ghế, sprite, hiệu ứng
+  hall.js           engine vẽ canvas: 10 ghế, sprite, hiệu ứng
   main.js           server, presence, chat, nghi lễ, gõ mõ
 vendor/
   mqtt.min.js       mqtt.js 5.10.1 (đã vendor, không gọi CDN)
@@ -220,7 +231,7 @@ Không có bước build. Sửa file là xong.
   biết đúng tên topic. Đừng gửi thông tin riêng tư vào chat. Muốn riêng tư thật thì cần broker
   riêng có mật khẩu, hoặc backend riêng.
 - **Không có đăng nhập.** Ai có link cũng vào được, tên là tự khai, không ai xác thực.
-- **Tối đa 32 người có ghế mỗi chánh điện.** Người thứ 33 trở đi chỉ xem.
+- **Tối đa 10 người có ghế mỗi chánh điện.** Người thứ 11 trở đi chỉ xem.
 - **Đồng hồ máy.** Thứ tự ngồi dựa trên thời điểm vào phòng do từng máy tự khai. Máy nào chỉnh
   giờ lệch nhiều có thể bị xếp chỗ khác thường.
 - **Giọng đọc:** bản này bỏ phần đọc thành tiếng (bản gốc dùng Edge TTS qua server). Âm thanh

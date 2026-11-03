@@ -16,5 +16,5 @@ window.APP_CONFIG = {
   defaultServer: 'luxshare',
 
   // Seats in the hall. Keep this equal to the number of seats built in hall.js.
-  capacity: 32,
+  capacity: 10,
 };
