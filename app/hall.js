@@ -314,34 +314,45 @@
     ctx.fillText(label, x, y + 1);
   }
 
-  /* The abbot sits in the centre aisle, off the painted cushions, so he gets
-     his own mat — the only seat that needs one. */
+  /* The abbot sits in the centre aisle and seat 10 sits at the head of the aisle
+     — neither has a cushion painted under it, so both get one drawn here. */
   function drawMat(x, y, s) {
     const w = 340 * s, h = w * 0.30;
+
+    // soft shadow on the floor
     ctx.save();
-    ctx.globalAlpha = 0.4;
+    ctx.globalAlpha = 0.38;
     ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.ellipse(x, y + h * 0.45, w * 0.52, h * 0.52, 0, 0, 6.29);
+    ctx.ellipse(x, y + h * 0.42, w * 0.53, h * 0.55, 0, 0, 6.29);
     ctx.fill();
     ctx.restore();
 
-    const g = ctx.createLinearGradient(0, y - h * 0.6, 0, y + h * 0.5);
-    g.addColorStop(0, '#8d4a22');
-    g.addColorStop(0.5, '#6a3016');
-    g.addColorStop(1, '#3d1a0b');
+    // side wall of the cushion, so it reads as a solid object and not a disc
+    ctx.beginPath();
+    ctx.ellipse(x, y + h * 0.26, w / 2, h / 2, 0, 0, 6.29);
+    ctx.fillStyle = '#3a2010';
+    ctx.fill();
+
+    // padded top — same brown family as the painted cushions, no gold plate
+    const g = ctx.createLinearGradient(0, y - h * 0.55, 0, y + h * 0.55);
+    g.addColorStop(0, '#8b5c36');
+    g.addColorStop(0.42, '#71462a');
+    g.addColorStop(1, '#4a2b16');
     ctx.beginPath();
     ctx.ellipse(x, y, w / 2, h / 2, 0, 0, 6.29);
     ctx.fillStyle = g;
     ctx.fill();
-    ctx.lineWidth = Math.max(1.2, 3 * s);
-    ctx.strokeStyle = 'rgba(240,198,106,.6)';
-    ctx.stroke();
 
-    ctx.beginPath();
-    ctx.ellipse(x, y - h * 0.10, w * 0.36, h * 0.26, 0, 0, 6.29);
-    ctx.strokeStyle = 'rgba(240,198,106,.28)';
+    // soft top highlight, offset like the light in the painting
+    const hg = ctx.createRadialGradient(x - w * 0.12, y - h * 0.28, 2, x, y, w * 0.5);
+    hg.addColorStop(0, 'rgba(220,170,120,.30)');
+    hg.addColorStop(1, 'rgba(220,170,120,0)');
+    ctx.fillStyle = hg;
+    ctx.fill();
+
     ctx.lineWidth = Math.max(1, 2 * s);
+    ctx.strokeStyle = 'rgba(196,140,86,.35)';
     ctx.stroke();
   }
 
