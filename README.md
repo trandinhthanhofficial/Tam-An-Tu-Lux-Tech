@@ -1,5 +1,9 @@
 # Chánh Điện Online · 在线正殿
 
+> **Đang chạy tại:** https://trandinhthanhofficial.github.io/Tam-An-Tu-Lux-Tech/
+>
+> Mở link, chọn chánh điện, nhập pháp danh là vào ngồi được. Gửi link cho người khác để họ vào cùng.
+
 Chánh điện 2.5D chạy trên web. Mỗi người mở link là bước vào chánh điện, ngồi xuống bồ đoàn.
 Ai trong phòng cũng thấy nhau theo thời gian thực: dâng hương, rải cánh sen, hoa sen, thỉnh chuông
 đều phát hiệu ứng và âm thanh tới **tất cả** người đang có mặt.
